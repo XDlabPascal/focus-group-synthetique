@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Focus group synthétique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: studio-style workbench. Four tabs (Personas, Concept, Session, Synthèse), cards on a cool grey ground, one ultramarine accent. */
+:root{
+  --bg:#f4f5f8; --surface:#ffffff; --ink:#15171f; --muted:#5b6172; --line:#dfe2ea;
+  --accent:#3d4ee0; --accent-ink:#ffffff; --soft:#eceefb;
+  --good:#1b8a5a; --warn:#a96a00; --bad:#c0392b;
+  --font-display:'Bricolage Grotesque',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101217; --surface:#181b23; --ink:#eceef4; --muted:#9aa1b3; --line:#2a2f3b;
+    --accent:#8b97ff; --accent-ink:#10121a; --soft:#222643;
+    --good:#4cc38a; --warn:#e0b04a; --bad:#ff7b6b; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101217; --surface:#181b23; --ink:#eceef4; --muted:#9aa1b3; --line:#2a2f3b;
+  --accent:#8b97ff; --accent-ink:#10121a; --soft:#222643;
+  --good:#4cc38a; --warn:#e0b04a; --bad:#ff7b6b; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--font-body);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-display);margin:0;text-wrap:balance;line-height:1.2}
+h1{font-size:26px;font-weight:700;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+h4{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:var(--font-body)}
+p{margin:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 64px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:16px}
+header.top p{color:var(--muted);max-width:60ch;margin-top:4px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
+.tabs button{appearance:none;background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font:500 15px var(--font-body);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs .n{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:10px;background:var(--soft);color:var(--accent);font-size:12px;font-weight:600;text-align:center;font-variant-numeric:tabular-nums}
+.btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font:500 14px var(--font-body);padding:8px 14px;border-radius:8px;cursor:pointer}
+.btn:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--accent);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--accent)}
+.btn.danger{color:var(--bad)}
+.btn.small{padding:5px 10px;font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.spread{justify-content:space-between}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.stack{display:flex;flex-direction:column;gap:16px}
+label.f{display:flex;flex-direction:column;gap:4px;font-weight:500;font-size:13px;color:var(--muted)}
+input[type=text],input[type=password],select,textarea{width:100%;font:400 14px/1.5 var(--font-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+textarea{resize:vertical}
+input[type=text]:focus,input[type=password]:focus,select:focus,textarea:focus{border-color:var(--accent)}
+.hint{color:var(--muted);font-size:13px}
+.empty{color:var(--muted);padding:24px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:var(--soft);color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.av{flex:none;width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font:600 13px var(--font-body)}
+.av.s{width:28px;height:28px;font-size:11px}
+/* personas */
+.pcard{display:flex;flex-direction:column;gap:10px}
+.pcard header{display:flex;align-items:center;gap:10px}
+.pcard .pname{font:600 15px var(--font-body);background:transparent;border-color:transparent;padding:4px 6px}
+.pcard .pname:hover{border-color:var(--line)}
+.pcard footer{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+details.box{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+details.box>summary{cursor:pointer;padding:12px 16px;font-weight:500;list-style:none}
+details.box>summary::-webkit-details-marker{display:none}
+details.box>summary::before{content:"+";display:inline-block;width:18px;color:var(--accent);font-weight:700}
+details.box[open]>summary::before{content:"–"}
+details.box .inner{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
+/* session */
+.bar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end}
+.bar label.f{min-width:130px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;font-weight:500;color:var(--muted);background:var(--surface)}
+.pill.run{color:var(--accent);border-color:var(--accent)}
+.pill.ok{color:var(--good);border-color:var(--good)}
+.pill.err{color:var(--bad);border-color:var(--bad)}
+.pill.warn{color:var(--warn);border-color:var(--warn)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.tile .v{font:700 26px var(--font-display);font-variant-numeric:tabular-nums}
+.tile .l{font-size:12px;color:var(--muted);margin-top:2px}
+.rcard{display:flex;flex-direction:column;gap:12px}
+.rcard header{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.rcard header .who{display:flex;align-items:center;gap:10px;font-weight:600}
+.bars{display:grid;grid-template-columns:90px 1fr 74px;gap:6px 10px;align-items:center;font-size:13px}
+.bars .track{height:8px;border-radius:4px;background:var(--bg);overflow:hidden}
+.bars .fill{height:100%;background:var(--accent);border-radius:4px}
+.bars .val{font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
+.quote{border-left:3px solid var(--accent);padding:2px 0 2px 12px;font-style:italic}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.two ul{margin:6px 0 0;padding-left:18px}
+.two li{margin-bottom:2px}
+.sub{font-size:13px;color:var(--muted)}
+.rcard details summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:500}
+.qa{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.qa b{display:block;font-size:13px}
+/* debate */
+.feed{display:flex;flex-direction:column;gap:20px}
+.round{display:flex;flex-direction:column;gap:10px}
+.mod{background:var(--soft);border-radius:10px;padding:10px 14px}
+.mod .tag{background:var(--surface);margin-bottom:4px}
+.reply{display:flex;gap:10px;align-items:flex-start}
+.bubble{background:var(--surface);border:1px solid var(--line);border-radius:4px 12px 12px 12px;padding:8px 12px;max-width:760px}
+.bubble .nm{font-weight:600;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.silent{color:var(--muted);font-size:13px;font-style:italic;margin-left:38px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:999px;font:400 13px var(--font-body);cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.ask{display:grid;grid-template-columns:200px 1fr auto;gap:8px;align-items:end}
+/* synthèse */
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.scroll{overflow-x:auto}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec ul{margin:0;padding-left:20px}
+.notice{border:1px solid var(--warn);border-radius:10px;padding:10px 14px;color:var(--ink);background:var(--surface)}
+.notice b{color:var(--warn)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:10;max-width:90vw}
+@media (max-width:640px){
+  .two{grid-template-columns:1fr}
+  .ask{grid-template-columns:1fr}
+  .bars{grid-template-columns:80px 1fr 64px}
+}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .3s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Focus group synthétique</h1>
+      <p>Vos personae réagissent à un concept ou à une proposition de valeur, chacune de son côté, puis en discussion. À lire comme des hypothèses à valider avec de vrais utilisateurs.</p>
+    </div>
+    <div class="row">
+      <button class="btn ghost small" data-action="export-json">Exporter la session (JSON)</button>
+      <button class="btn ghost small" data-action="lock">Verrouiller</button>
+      <label class="btn ghost small" for="file-import" style="cursor:pointer">Importer un JSON</label>
+      <input id="file-import" type="file" accept=".json,application/json" hidden>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Étapes">
+    <button role="tab" id="tab-personas" data-tab="personas" aria-selected="true">1. Personas <span class="n" id="n-personas">0</span></button>
+    <button role="tab" id="tab-concept" data-tab="concept" aria-selected="false">2. Concept</button>
+    <button role="tab" id="tab-session" data-tab="session" aria-selected="false">3. Session <span class="n" id="n-session">0</span></button>
+    <button role="tab" id="tab-synthese" data-tab="synthese" aria-selected="false">4. Synthèse</button>
+    <button role="tab" id="tab-reglages" data-tab="reglages" aria-selected="false">Réglages</button>
+  </nav>
+
+  <!-- PERSONAS -->
+  <section id="panel-personas" class="stack">
+    <div class="row spread">
+      <p class="hint" style="max-width:70ch">Une fiche par persona : identité, rapport au sujet, motivations, freins, valeurs, style de parole, contradictions. Plus elle est concrète, plus les réponses se distinguent.</p>
+      <div class="row">
+        <button class="btn" data-action="add-persona">Ajouter une persona</button>
+        <button class="btn ghost" data-action="clear-examples" id="btn-clear-examples">Retirer les exemples</button>
+      </div>
+    </div>
+    <div class="grid" id="personas-grid"></div>
+    <details class="box">
+      <summary>Importer vos personae existantes</summary>
+      <div class="inner">
+        <p class="hint">Collez un ou plusieurs profils, séparés par une ligne contenant <b>---</b>. La première ligne de chaque bloc est le nom. Si vos documents sont désordonnés, « Structurer avec Claude » les range dans le format de fiche sans rien inventer.</p>
+        <textarea id="import-text" rows="8" aria-label="Texte des personae à importer" placeholder="Camille, 34 ans, cheffe de projet&#10;Vit à Nantes avec son conjoint et un enfant…&#10;---&#10;Michel, 61 ans…"></textarea>
+        <div class="row">
+          <button class="btn" data-action="import-raw">Importer tel quel</button>
+          <button class="btn ghost" data-action="import-structure" id="btn-structure">Structurer avec Claude</button>
+          <button class="btn ghost" data-action="export-personas">Exporter les personas (JSON)</button>
+          <span class="hint" id="import-msg" role="status"></span>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- CONCEPT -->
+  <section id="panel-concept" class="stack" hidden>
+    <div class="card stack">
+      <div class="row spread"><h2>Stimulus à tester</h2><span class="tag" id="tag-st-example">Exemple à remplacer</span></div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+        <label class="f" for="st-titre">Titre
+          <input type="text" id="st-titre" autocomplete="off"></label>
+        <label class="f" for="st-type">Ce que vous testez
+          <select id="st-type">
+            <option value="concept">Un concept</option>
+            <option value="valeur">Une proposition de valeur</option>
+            <option value="les deux">Un concept et sa proposition de valeur</option>
+          </select></label>
+      </div>
+      <label class="f" for="st-texte">Description présentée au groupe
+        <textarea id="st-texte" rows="8"></textarea></label>
+      <p class="hint">Restez factuel : ce que c'est, comment ça marche, ce que ça coûte si c'est défini. Évitez les superlatifs, ils orientent les réponses.</p>
+      <label class="f" for="st-contexte">Contexte d'usage ou de marché (facultatif)
+        <textarea id="st-contexte" rows="2"></textarea></label>
+    </div>
+    <div class="card stack">
+      <div class="row spread">
+        <h2>Questions du modérateur</h2>
+        <div class="row">
+          <button class="btn ghost small" data-action="preset" data-preset="concept">Gabarit concept</button>
+          <button class="btn ghost small" data-action="preset" data-preset="valeur">Gabarit proposition de valeur</button>
+        </div>
+      </div>
+      <label class="f" for="st-questions">Une question par ligne. Chaque persona y répond à froid, seule.
+        <textarea id="st-questions" rows="8"></textarea></label>
+    </div>
+    <div class="row"><button class="btn" data-goto="session">Passer à la session</button></div>
+  </section>
+
+  <!-- SESSION -->
+  <section id="panel-session" class="stack" hidden>
+    <div class="notice" id="no-claude" hidden><b>Clé API manquante.</b> Ajoutez votre clé Anthropic dans l'onglet <a href="#reglages">Réglages</a> pour lancer une session.</div>
+    <div class="card stack">
+      <h2>Réactions à froid</h2>
+      <p class="hint">Chaque persona répond seule, sans voir les autres. C'est la base de la session : elle limite l'effet d'alignement du débat.</p>
+      <div class="bar">
+        <label class="f" for="set-runs">Tirages par persona
+          <select id="set-runs"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+        <label class="f" for="set-tier">Niveau de réflexion
+          <select id="set-tier"><option value="quick">Rapide</option><option value="default">Standard</option><option value="complex">Approfondi</option></select></label>
+        <label class="chk" for="set-share"><input type="checkbox" id="set-share"> Les participants voient les réactions à froid des autres</label>
+        <button class="btn" id="btn-cold" data-action="run-cold">Lancer les réactions à froid</button>
+        <button class="btn ghost" id="btn-stop" data-action="stop" hidden>Arrêter</button>
+      </div>
+      <p class="hint">Plusieurs tirages montrent si une réaction est stable ou due au hasard : l'écart entre tirages s'affiche à côté de chaque note. <b id="call-hint"></b></p>
+      <div class="pills" id="runstatus" role="status"></div>
+    </div>
+    <div id="cold" class="stack"></div>
+
+    <div class="card stack">
+      <div class="row spread">
+        <h2>Discussion</h2>
+        <button class="btn ghost small" data-action="suggest" id="btn-suggest">Suggérer des relances</button>
+      </div>
+      <div id="divergences" class="sub" hidden></div>
+      <div class="chips" id="chips"></div>
+      <div class="feed" id="feed"></div>
+      <form id="askform" class="ask">
+        <label class="f" for="ask-target">S'adresse à
+          <select id="ask-target"></select></label>
+        <label class="f" for="ask-input">Votre question
+          <input type="text" id="ask-input" autocomplete="off" placeholder="Qu'est-ce qui vous ferait renoncer ?"></label>
+        <button class="btn" type="submit" id="btn-ask">Poser la question</button>
+      </form>
+      <p class="hint">Dans un tour, les personae répondent en parallèle, sans se voir (un appel à l'API par persona). Elles lisent ensuite tout l'historique au tour suivant.</p>
+    </div>
+    <div class="row">
+      <button class="btn" data-action="go-synthese">Passer à la synthèse</button>
+      <button class="btn ghost danger" data-action="reset-session" id="btn-reset">Effacer les résultats</button>
+    </div>
+  </section>
+
+  <!-- SYNTHESE -->
+  <section id="panel-synthese" class="stack" hidden>
+    <div class="row spread">
+      <p class="hint" style="max-width:70ch">La synthèse lit les réactions à froid et la discussion. Les chiffres des tuiles sont calculés ici, sur les notes et les positions déclarées, pas par Claude.</p>
+      <div class="row">
+        <button class="btn" data-action="run-synth" id="btn-synth">Produire la synthèse</button>
+        <button class="btn ghost" data-action="export-md">Télécharger le rapport (.md)</button>
+        <button class="btn ghost" data-action="copy-md">Copier le rapport</button>
+      </div>
+    </div>
+    <div id="synth-status" class="pills" role="status"></div>
+    <div id="synth" class="stack"></div>
+  </section>
+
+  <!-- RÉGLAGES -->
+  <section id="panel-reglages" class="stack" hidden>
+    <div class="card stack">
+      <h2>Connexion à Claude</h2>
+      <p class="hint" style="max-width:70ch">Les appels partent de ce navigateur directement vers l'API Anthropic. La clé reste dans le stockage local de ce navigateur : elle n'est ni exportée avec la session, ni envoyée ailleurs. Utilisez une clé dédiée à cet outil, avec une limite de dépense fixée dans la console Anthropic.</p>
+      <label class="f" for="api-key">Clé API Anthropic
+        <input type="password" id="api-key" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"></label>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+        <label class="f" for="m-quick">Modèle du niveau « Rapide »
+          <input type="text" id="m-quick" autocomplete="off" spellcheck="false"></label>
+        <label class="f" for="m-default">Modèle du niveau « Standard »
+          <input type="text" id="m-default" autocomplete="off" spellcheck="false"></label>
+        <label class="f" for="m-complex">Modèle du niveau « Approfondi »
+          <input type="text" id="m-complex" autocomplete="off" spellcheck="false"></label>
+      </div>
+      <div class="row">
+        <button class="btn" data-action="test-api" id="btn-test">Tester la connexion</button>
+        <button class="btn ghost danger" data-action="forget-key">Effacer la clé de ce navigateur</button>
+        <span class="hint" id="api-msg" role="status"></span>
+      </div>
+      <p class="hint" id="api-calls"></p>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- utilitaires ---------- */
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var uid=function(){return Math.random().toString(36).slice(2,9)};
+var esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+var sleep=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+var fmt=function(n){return n==null?"–":(Math.round(n*10)/10).toFixed(1).replace(".",",")};
+var str=function(x){return x==null?"":String(x).trim()};
+var arr=function(x){return Array.isArray(x)?x.map(str).filter(Boolean):[]};
+var initials=function(n){var p=str(n).split(/\s+/).filter(Boolean);return ((p[0]||"?")[0]+(p[1]?p[1][0]:"")).toUpperCase()};
+var color=function(i){return "hsl("+((i*57+215)%360)+" 52% 42%)"};
+var shuffle=function(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a};
+
+/* ---------- données ---------- */
+var FICHE_TEMPLATE=["Identité et contexte :","Rapport au sujet testé :","Motivations :","Freins et peurs :","Valeurs et critères de décision :","Style de communication :","Biais assumés :","Contradictions (ce qu'elle dit / ce qu'elle fait) :","Citations types :"].join("\n\n");
+
+var PRESETS={
+  concept:["Qu'est-ce que tu comprends de ce concept, avec tes mots ?","À quel moment de ta vie ou de ta journée ça te servirait, ou pas ?","Qu'est-ce qui te plaît, qu'est-ce qui te gêne ?","Qu'est-ce que tu utilises aujourd'hui pour répondre à ce besoin ?","Qu'est-ce qui te ferait essayer, ou renoncer ?","Qu'est-ce qui manque pour que ce soit crédible ?"],
+  valeur:["Dis-moi en une phrase ce que cette offre te promet.","Cette promesse est-elle crédible ? Qu'est-ce qui te fait douter ?","Par rapport à ce que tu utilises aujourd'hui, qu'est-ce que tu gagnes, qu'est-ce que tu perds ?","Quel prix ou quel effort serais-tu prêt(e) à y consacrer, vu ton budget et tes habitudes ?","Qui, autour de toi, serait le plus intéressé ? Le moins ?","Qu'est-ce qui t'empêcherait de passer à l'acte ?"]
+};
+
+function examplePersonas(){return [
+ {id:uid(),exemple:true,actif:true,name:"Camille Roux",fiche:
+"Identité et contexte : 34 ans, cheffe de projet dans une PME, vit à Nantes avec son conjoint et un enfant de 4 ans. Télétravail 2 jours par semaine, voiture pour les trajets.\n\nRapport au sujet testé : utilise beaucoup d'applications au quotidien, installe peu et désinstalle vite ce qui ne sert pas.\n\nMotivations : gagner du temps, réduire la charge mentale, que les choses fonctionnent du premier coup.\n\nFreins et peurs : abonnements qui s'accumulent, notifications, services qui disparaissent au bout d'un an.\n\nValeurs et critères de décision : fiabilité, simplicité, rapport utilité/prix. Regarde les avis avant d'essayer.\n\nStyle de communication : directe, phrases courtes, demande des exemples concrets, peu d'enthousiasme affiché.\n\nBiais assumés : sceptique envers les nouveautés « qui promettent tout ».\n\nContradictions : dit vouloir réduire sa consommation numérique mais teste dès qu'un outil promet de gagner du temps.\n\nCitations types : « Ça marche tout de suite, ou je laisse tomber. » / « Et si ça tombe en panne un lundi matin ? »"},
+ {id:uid(),exemple:true,actif:true,name:"Michel Fournier",fiche:
+"Identité et contexte : 61 ans, technicien de maintenance, vit à Saint-Nazaire, marié, deux enfants adultes partis. Part à la retraite dans deux ans.\n\nRapport au sujet testé : smartphone utilisé pour les appels, les SMS et quelques applications de banque et de météo. Préfère le téléphone ou le papier pour les démarches.\n\nMotivations : fiabilité, ne pas dépendre d'un écran, garder ses habitudes.\n\nFreins et peurs : sécurité des données, arnaques, interfaces qui changent sans prévenir.\n\nValeurs et critères de décision : confiance dans l'organisation qui est derrière, avis de sa femme et de ses collègues, coût clair.\n\nStyle de communication : posé, expressions imagées, prend le temps, pose des questions pratiques.\n\nBiais assumés : méfiant envers tout ce qui demande de créer un compte.\n\nContradictions : critique les écrans mais passe ses soirées sur des vidéos de bricolage.\n\nCitations types : « Moi, je veux savoir qui est derrière. » / « Si c'est compliqué, ça ne sert à rien. »"},
+ {id:uid(),exemple:true,actif:true,name:"Inès Benali",fiche:
+"Identité et contexte : 23 ans, alternante en design graphique, vit en colocation à Lyon, budget serré, se déplace à vélo et en transports en commun.\n\nRapport au sujet testé : très à l'aise avec le numérique, mobile en premier, teste les nouveautés avant ses amis.\n\nMotivations : économiser, faire partie de ce qui se passe, avoir un truc bien fait et agréable à utiliser.\n\nFreins et peurs : interface moche ou lente, obligation de donner trop de données, effet « gadget » qui ne dure pas.\n\nValeurs et critères de décision : gratuité ou petit prix, design, ce que ses amis en pensent, impact écologique.\n\nStyle de communication : spontanée, vocabulaire familier, s'enthousiasme vite et se lasse vite, humour.\n\nBiais assumés : juge beaucoup sur l'esthétique et sur la première minute d'utilisation.\n\nContradictions : parle d'écologie mais commande beaucoup en ligne quand c'est pas cher.\n\nCitations types : « Si c'est joli et gratuit, je teste direct. » / « Ouais mais j'ai déjà dix applis, là. »"}
+];}
+
+function defaultState(){return {
+  v:1,
+  personas:examplePersonas(),
+  stimulus:{exemple:true,titre:"Covoit'Site",type:"concept",
+    texte:"Une application mobile qui met en relation les salariés d'un même site pour partager leurs trajets domicile-travail. Chaque salarié indique ses horaires et son point de départ ; l'application propose des équipages de 2 à 4 personnes et suit le partage des frais. L'employeur réserve des places de parking aux équipages. L'application est gratuite pour les salariés.",
+    contexte:"Site de 800 salariés en périphérie d'une ville moyenne, transports en commun limités.",
+    questions:PRESETS.concept.slice()},
+  settings:{runs:1,tier:"default",share:false},
+  phase1:{},rounds:[],suggestions:[],divergences:[],synthese:null
+};}
+
+function mergeState(d,l){
+  var s=defaultState();
+  if(!l||typeof l!=="object")return s;
+  if(Array.isArray(l.personas))s.personas=l.personas.map(function(p){return {id:p.id||uid(),name:str(p.name)||"Sans nom",fiche:String(p.fiche||""),actif:p.actif!==false,exemple:!!p.exemple}});
+  if(l.stimulus)s.stimulus=Object.assign(s.stimulus,l.stimulus);
+  if(l.settings)s.settings=Object.assign(s.settings,l.settings);
+  ["phase1"].forEach(function(k){if(l[k]&&typeof l[k]==="object")s[k]=l[k]});
+  ["rounds","suggestions","divergences"].forEach(function(k){if(Array.isArray(l[k]))s[k]=l[k]});
+  if(l.synthese)s.synthese=l.synthese;
+  return s;
+}
+
+var S;
+try{var raw=localStorage.getItem("fgs.v1");S=mergeState(null,raw?JSON.parse(raw):null)}catch(e){S=defaultState()}
+var saveT;
+function save(){clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem("fgs.v1",JSON.stringify(S))}catch(e){}},300)}
+
+var RT={busy:false,ctl:null,status:{},pending:null,synthBusy:false,msg:""};
+
+function active(){return S.personas.filter(function(p){return p.actif!==false})}
+function pidx(id){return S.personas.findIndex(function(p){return p.id===id})}
+function pById(id){return S.personas.find(function(p){return p.id===id})}
+
+/* ---------- connexion à l'API Anthropic ---------- */
+var CFG={key:"",models:{quick:"claude-haiku-5-5","default":"claude-sonnet-5-5",complex:"claude-opus-5-5"},calls:0};
+try{var rc=JSON.parse(localStorage.getItem("fgs.cfg")||"null");if(rc){CFG.key=String(rc.key||"");Object.assign(CFG.models,rc.models||{})}}catch(e){}
+function saveCfg(){try{localStorage.setItem("fgs.cfg",JSON.stringify({key:CFG.key,models:CFG.models}))}catch(e){}}
+function updateKeyNotice(){$("#no-claude").hidden=!!CFG.key}
+function updateCalls(){$("#api-calls").textContent="Appels à l'API depuis l'ouverture de la page : "+CFG.calls+"."}
+function updateCallHint(){var n=active().length*(Number(S.settings.runs)||1);var el=$("#call-hint");if(el)el.textContent="Cette étape fait "+n+" appel"+(n>1?"s":"")+" à l'API."}
+function errMsg(e){
+  if(!e)return "Erreur inconnue";
+  if(e.name==="AbortError"||e.code==="aborted")return "Arrêté";
+  if(e.code==="unauthorized")return "Clé API refusée. Vérifiez-la dans l'onglet Réglages.";
+  if(e.code==="no_key")return "Clé API manquante. Ajoutez-la dans l'onglet Réglages.";
+  if(e.code==="rate_limited")return "Trop de requêtes à la suite. Patientez un instant puis relancez.";
+  return e.message||"Erreur";
+}
+async function ask(prompt,signal,maxTokens){
+  if(!CFG.key)throw {code:"no_key"};
+  var model=CFG.models[S.settings.tier]||CFG.models["default"];
+  for(var attempt=0;;attempt++){
+    var res;
+    try{
+      res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal:signal,
+        headers:{"content-type":"application/json","x-api-key":CFG.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        body:JSON.stringify({model:model,max_tokens:maxTokens||2500,messages:[{role:"user",content:prompt}]})});
+    }catch(e){
+      if(e&&e.name==="AbortError")throw e;
+      throw {code:"network",message:"Connexion impossible à l'API Anthropic. Vérifiez votre réseau."};
+    }
+    CFG.calls++;updateCalls();
+    if(res.ok){
+      var j=await res.json();
+      return (j.content||[]).filter(function(b){return b.type==="text"}).map(function(b){return b.text}).join("");
+    }
+    var body=null;try{body=await res.json()}catch(e){}
+    var detail=body&&body.error&&body.error.message?" ("+body.error.message+")":"";
+    if((res.status===429||res.status===529||res.status===503)&&attempt<2&&!(signal&&signal.aborted)){
+      var ra=Number(res.headers.get("retry-after"))||5*(attempt+1);
+      await sleep(Math.min(ra,30)*1000);continue;
+    }
+    throw {code:res.status===401?"unauthorized":res.status===429?"rate_limited":"http_"+res.status,message:"Erreur de l'API ("+res.status+")"+detail};
+  }
+}
+async function testApi(btn){
+  var m=$("#api-msg");
+  if(!CFG.key){m.textContent="Collez d'abord votre clé.";return}
+  btn.disabled=true;m.textContent="Test en cours…";
+  try{await ask("Réponds uniquement par le mot : ok",null,20);m.textContent="Connexion réussie avec le modèle « "+(CFG.models[S.settings.tier]||CFG.models["default"])+" »."}
+  catch(e){m.textContent=errMsg(e)}
+  btn.disabled=false;
+}
+function forgetKey(){CFG.key="";$("#api-key").value="";saveCfg();updateKeyNotice();$("#api-msg").textContent="Clé effacée de ce navigateur."}
+function parseJSON(t){
+  var s=String(t||"").trim().replace(/^```(?:json)?\s*/i,"").replace(/```\s*$/,"");
+  var a=s.indexOf("{"),b=s.indexOf("[");
+  var i=Math.min(a<0?1e9:a,b<0?1e9:b);
+  var j=Math.max(s.lastIndexOf("}"),s.lastIndexOf("]"));
+  if(i>=1e9||j<i)throw new Error("Réponse non exploitable");
+  return JSON.parse(s.slice(i,j+1));
+}
+async function askJSON(prompt,signal,maxTokens){
+  var t=await ask(prompt,signal,maxTokens);
+  try{return parseJSON(t)}catch(e){
+    t=await ask(prompt+"\n\nRappel : réponds uniquement par un JSON valide, sans aucun texte autour.",signal,maxTokens);
+    return parseJSON(t);
+  }
+}
+async function pool(tasks,limit,onEach){
+  var i=0,res=[];
+  async function w(){while(i<tasks.length){var k=i++;try{res[k]=await tasks[k]()}catch(e){res[k]={__err:e}}if(onEach)onEach(k,res[k])}}
+  await Promise.all(Array.from({length:Math.min(limit,tasks.length)},w));
+  return res;
+}
+
+/* ---------- toast ---------- */
+var toastT;
+function flash(msg){var t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},4200)}
+
+/* ---------- onglets ---------- */
+var TABS=["personas","concept","session","synthese","reglages"];
+function showTab(t){
+  if(TABS.indexOf(t)<0)t="personas";
+  TABS.forEach(function(n){$("#panel-"+n).hidden=n!==t;$("#tab-"+n).setAttribute("aria-selected",n===t?"true":"false")});
+  try{if(location.hash!=="#"+t)location.hash=t}catch(e){}
+  if(t==="session"){renderTargets();}
+  if(t==="synthese"){renderSynth()}
+}
+window.addEventListener("hashchange",function(){var h=location.hash.slice(1);if(TABS.indexOf(h)>=0)showTab(h)});
+
+/* ---------- personas ---------- */
+function renderPersonas(){
+  var box=$("#personas-grid");
+  box.innerHTML=S.personas.length?S.personas.map(function(p,i){return ''+
+  '<article class="card pcard" data-id="'+p.id+'">'+
+   '<header><span class="av" style="background:'+color(i)+'">'+esc(initials(p.name))+'</span>'+
+   '<input type="text" class="pname" data-field="name" id="pn-'+p.id+'" value="'+esc(p.name)+'" aria-label="Nom de la persona" autocomplete="off">'+
+   (p.exemple?'<span class="tag">Exemple</span>':'')+'</header>'+
+   '<textarea data-field="fiche" id="pf-'+p.id+'" rows="14" aria-label="Fiche de '+esc(p.name)+'">'+esc(p.fiche)+'</textarea>'+
+   '<footer><label class="chk"><input type="checkbox" data-field="actif" '+(p.actif!==false?'checked':'')+'> Participe aux sessions</label>'+
+   '<button class="btn ghost small danger" data-action="del-persona">Supprimer</button></footer>'+
+  '</article>'}).join(''):'<p class="empty">Aucune persona. Ajoutez-en une ou importez vos fiches.</p>';
+  $("#n-personas").textContent=active().length;
+  $("#btn-clear-examples").hidden=!S.personas.some(function(p){return p.exemple});
+}
+$("#personas-grid").addEventListener("input",function(e){
+  var a=e.target.closest("article");if(!a)return;
+  var p=pById(a.dataset.id);if(!p)return;
+  var f=e.target.dataset.field;
+  if(f==="name"){p.name=e.target.value;var av=$(".av",a);av.textContent=initials(p.name)}
+  if(f==="fiche")p.fiche=e.target.value;
+  p.exemple=false;var tg=$(".tag",a);if(tg)tg.remove();
+  save();
+});
+$("#personas-grid").addEventListener("change",function(e){
+  var a=e.target.closest("article");if(!a)return;
+  var p=pById(a.dataset.id);if(!p)return;
+  if(e.target.dataset.field==="actif"){p.actif=e.target.checked;$("#n-personas").textContent=active().length;save()}
+});
+
+function parseRawPersonas(text){
+  return text.split(/^\s*-{3,}\s*$/m).map(function(b){return b.trim()}).filter(Boolean).map(function(b){
+    var lines=b.split("\n");
+    var name=lines[0].replace(/^#+\s*/,"").replace(/^nom\s*:\s*/i,"").trim().slice(0,80)||"Sans nom";
+    return {id:uid(),name:name,fiche:lines.slice(1).join("\n").trim()||b,actif:true,exemple:false};
+  });
+}
+
+/* ---------- concept ---------- */
+function renderStimulus(){
+  var st=S.stimulus;
+  $("#st-titre").value=st.titre||"";
+  $("#st-type").value=st.type||"concept";
+  $("#st-texte").value=st.texte||"";
+  $("#st-contexte").value=st.contexte||"";
+  $("#st-questions").value=(st.questions||[]).join("\n");
+  $("#tag-st-example").hidden=!st.exemple;
+}
+["titre","texte","contexte"].forEach(function(k){
+  $("#st-"+k).addEventListener("input",function(e){S.stimulus[k]=e.target.value;S.stimulus.exemple=false;$("#tag-st-example").hidden=true;save()});
+});
+$("#st-type").addEventListener("change",function(e){S.stimulus.type=e.target.value;save()});
+$("#st-questions").addEventListener("input",function(e){S.stimulus.questions=e.target.value.split("\n").map(function(x){return x.trim()}).filter(Boolean);save()});
+
+/* ---------- prompts ---------- */
+var RULES="RÈGLES DE JEU\n- Parle à la première personne, avec le registre, le vocabulaire et la longueur de réponse propres à ce personnage. Pas de ton de consultant, pas de style « assistant ».\n- Tu n'es pas là pour aider, flatter ou valider. Réagis selon ton vécu, tes valeurs, tes freins et tes habitudes réelles, y compris quand ça va contre le concept.\n- Tu peux ne pas comprendre, être indifférent(e), juger que ce n'est pas pour toi, ou te contredire légèrement comme le ferait une vraie personne.\n- N'invente pas de compétences ni d'expériences absentes de ta fiche : si un sujet t'est étranger, dis-le.\n- N'invente pas de chiffres ni de faits sur le produit : si une information manque dans la description, dis ce qui manque.\n- Ne mentionne jamais que tu es une IA ou une simulation.";
+var TYPE_LABEL={concept:"Concept","valeur":"Proposition de valeur","les deux":"Concept et proposition de valeur"};
+function stimulusBlock(){
+  var st=S.stimulus;
+  return "STIMULUS PRÉSENTÉ AU GROUPE\nType : "+(TYPE_LABEL[st.type]||"Concept")+"\nTitre : "+(st.titre||"(sans titre)")+"\n"+(st.contexte?"Contexte : "+st.contexte+"\n":"")+"Description :\n"+st.texte;
+}
+function personaHeader(p){
+  return "Tu es "+p.name+", participant(e) à un focus group. Voici ta fiche ; c'est tout ce que tu sais de toi :\n<fiche>\n"+p.fiche+"\n</fiche>";
+}
+function coldPrompt(p){
+  var qs=S.stimulus.questions||[];
+  return personaHeader(p)+"\n\n"+RULES+"\n\n"+stimulusBlock()+
+  "\n\nTu découvres ce stimulus pour la première fois, seul(e), sans avoir entendu les autres participants."+
+  (qs.length?"\n\nQUESTIONS DU MODÉRATEUR\n"+qs.map(function(q,i){return (i+1)+". "+q}).join("\n"):"")+
+  "\n\nRéponds uniquement par un objet JSON de cette forme, valeurs en français et dans ta voix :\n{\n"+
+  ' "reformulation": "ce que je comprends de la proposition, avec mes mots (1 à 2 phrases)",\n'+
+  ' "reaction_a_chaud": "ma réaction spontanée (2 à 4 phrases)",\n'+
+  ' "scores": {"clarte": 0, "attrait": 0, "pertinence": 0, "credibilite": 0},\n'+
+  ' "intention": "oui | peut-etre | non",\n'+
+  ' "attraits": ["3 éléments courts au maximum"],\n'+
+  ' "freins": ["3 éléments courts au maximum"],\n'+
+  ' "ce_qui_manque": "ce qu\'il me faudrait savoir ou voir pour me décider",\n'+
+  ' "reponses": [{"question": "texte exact de la question", "reponse": "ma réponse (1 à 3 phrases)"}],\n'+
+  ' "verbatim": "une phrase que je dirais à un proche à ce sujet"\n}\n\n'+
+  "Notation de 1 à 10, où 5 est neutre. Utilise toute l'échelle selon ta vraie réaction et ne te rabats pas sur 7 ou 8 par politesse. clarte = j'ai compris ce que c'est ; attrait = ça me donne envie ; pertinence = ça répond à un besoin que j'ai vraiment ; credibilite = je crois que ça tient ses promesses. intention = est-ce que j'essaierais.";
+}
+function firstRun(id){return runsOf(id)[0]||null}
+function coldDigest(p){
+  var r=firstRun(p.id);if(!r)return "(pas de réaction enregistrée)";
+  return "Ma reformulation : "+r.reformulation+"\nMa réaction : "+r.reaction+"\nMon intention : "+intLabel(r.intention)+(r.freins.length?"\nMes freins : "+r.freins.join(" ; "):"")+(r.attraits.length?"\nMes attraits : "+r.attraits.join(" ; "):"");
+}
+function transcript(){
+  var out=[];
+  S.rounds.forEach(function(r){
+    out.push("[Modérateur"+(r.cible&&r.cible!=="tous"?" → "+r.cible:" → tout le groupe")+"] "+r.question);
+    r.replies.forEach(function(x){
+      if(x.intervient&&x.message){var p=pById(x.personaId);out.push((p?p.name:"?")+" : "+x.message)}
+    });
+  });
+  return out.join("\n");
+}
+function debatePrompt(p,question,cible){
+  var others="";
+  if(S.settings.share){
+    others="\n\nRÉACTIONS À FROID DES AUTRES PARTICIPANTS (écrites chacun de leur côté avant la discussion)\n"+
+      active().filter(function(o){return o.id!==p.id}).map(function(o){var r=firstRun(o.id);return r?o.name+" : "+r.reaction+" (intention : "+intLabel(r.intention)+")":""}).filter(Boolean).join("\n");
+  }
+  var adressee=cible==="tous"?"tout le groupe":cible;
+  var targeted=cible!=="tous"&&cible!==p.name?"\nLa question est adressée à "+cible+". Tu ne réponds que si tu as quelque chose de net à ajouter, sinon mets intervient à false.":"";
+  return personaHeader(p)+"\n\n"+RULES+"\n\n"+stimulusBlock()+
+  "\n\nCE QUE TU AS DIT À FROID, AVANT LA DISCUSSION\n"+coldDigest(p)+others+
+  "\n\nÉCHANGES DEPUIS LE DÉBUT DE LA DISCUSSION\n"+(transcript()||"(aucun échange pour l'instant)")+
+  "\n\nLE MODÉRATEUR S'ADRESSE À "+adressee.toUpperCase()+" :\n« "+question+" »"+targeted+
+  "\n\nRéponds comme à l'oral dans un focus group : 1 à 5 phrases, tu peux réagir à un participant en le nommant, être d'accord, en désaccord ou nuancer. Tu peux rester très bref ou ne pas intervenir si ça ne te concerne pas. Ne change d'avis que si un argument t'a réellement convaincu(e) ; sinon maintiens ta position, même si les autres pensent autrement."+
+  "\n\nRéponds uniquement par un JSON : {\"intervient\": true ou false, \"message\": \"ce que tu dis\", \"position\": \"maintenue | nuancée | changée\"}. position décrit ton avis sur le stimulus par rapport à ta réaction à froid.";
+}
+function suggestPrompt(){
+  var lines=active().map(function(p){return "### "+p.name+"\n"+coldDigest(p)+"\n"+(firstRun(p.id)&&firstRun(p.id).manque?"Ce qui lui manque : "+firstRun(p.id).manque:"")}).join("\n\n");
+  return "Tu es un modérateur de focus group expérimenté. Voici les réactions individuelles (à froid) de chaque participant à un stimulus.\n\n"+stimulusBlock()+"\n\nRÉACTIONS\n"+lines+
+  "\n\nProduis uniquement ce JSON :\n{\"divergences\": [\"2 à 4 lignes décrivant les vraies divergences entre participants\"], \"questions\": [{\"question\": \"...\", \"cible\": \"tous ou le nom exact d'un participant\", \"pourquoi\": \"ce que la question cherche à révéler\"}]}\n\nPropose 4 questions de relance, formulées de façon neutre et non orientée (pas de question fermée qui suggère la réponse). Inclus au moins : une question qui teste l'objection la plus forte, une qui explore un désaccord entre deux participants nommés, et une qui sonde un accord un peu trop facile (risque de politesse ou de conformisme).";
+}
+function compactCold(){
+  return active().map(function(p){var r=firstRun(p.id);return r?{nom:p.name,reformulation:r.reformulation,reaction:r.reaction,scores:r.scores,intention:r.intention,attraits:r.attraits,freins:r.freins,manque:r.manque,verbatim:r.verbatim,reponses:r.reponses}:null}).filter(Boolean);
+}
+function synthPrompt(){
+  return "Tu es analyste UX et recherche utilisateur. Tu synthétises un focus group SIMULÉ : les participants sont des personae jouées par un modèle de langage, pas de vraies personnes.\n\n"+stimulusBlock()+
+  "\n\nPERSONAE\n"+active().map(function(p){return "### "+p.name+"\n"+p.fiche}).join("\n\n")+
+  "\n\nRÉACTIONS À FROID (JSON)\n"+JSON.stringify(compactCold())+
+  "\n\nDISCUSSION\n"+(transcript()||"(pas de discussion)")+
+  "\n\nProduis uniquement ce JSON, en français :\n{\n"+
+  ' "resume": "4 à 6 phrases : ce qu\'il faut retenir",\n'+
+  ' "verdict_par_persona": [{"nom": "", "intention": "oui | peut-etre | non", "pourquoi": "1 phrase"}],\n'+
+  ' "consensus": ["points sur lesquels tout le monde s\'accorde"],\n'+
+  ' "divergences": [{"sujet": "", "positions": [{"nom": "", "position": ""}]}],\n'+
+  ' "objections": [{"objection": "", "portee": "transverse | segment", "personas": ["noms"]}],\n'+
+  ' "attraits": ["ce qui attire, avec pour qui"],\n'+
+  ' "verbatims": [{"nom": "", "citation": "phrase copiée mot pour mot depuis les données ci-dessus"}],\n'+
+  ' "hypotheses_a_valider": [{"hypothese": "", "comment_valider": "méthode concrète avec de vrais utilisateurs"}],\n'+
+  ' "pistes": ["ajustements du concept ou de la proposition de valeur à explorer"],\n'+
+  ' "fiabilite": "2 à 3 phrases honnêtes : zones où les personae sont trop peu définies, signes de complaisance ou de conformisme dans la discussion, ce que cette simulation ne peut pas dire"\n}\n\n'+
+  "Règles : ne cite que des phrases qui existent dans les données ; n'invente aucun chiffre ; distingue ce qui vient de plusieurs personae de ce qui vient d'une seule ; signale si une persona a changé d'avis sous la pression du groupe plutôt que sur un argument.";
+}
+
+/* ---------- réactions à froid ---------- */
+var DIMS=[["clarte","Clarté"],["attrait","Attrait"],["pertinence","Pertinence"],["credibilite","Crédibilité"]];
+function normInt(x){var s=String(x||"").toLowerCase().replace(/é/g,"e");if(/^oui|^yes/.test(s))return "oui";if(/non|no\b/.test(s)&&!/peut/.test(s))return "non";return "peut-etre"}
+function intLabel(i){return i==="oui"?"Intéressé(e)":i==="non"?"Pas pour moi":"Hésitant(e)"}
+function intClass(i){return i==="oui"?"ok":i==="non"?"err":"warn"}
+function cleanCold(r){
+  var sc={};
+  DIMS.forEach(function(d){var v=Number(r.scores&&r.scores[d[0]]);sc[d[0]]=isFinite(v)&&v>0?Math.min(10,Math.max(1,v)):null});
+  return {reformulation:str(r.reformulation),reaction:str(r.reaction_a_chaud),scores:sc,intention:normInt(r.intention),attraits:arr(r.attraits),freins:arr(r.freins),manque:str(r.ce_qui_manque),verbatim:str(r.verbatim),
+    reponses:Array.isArray(r.reponses)?r.reponses.map(function(x){return {question:str(x&&x.question),reponse:str(x&&x.reponse)}}):[]};
+}
+function runsOf(id){return (S.phase1[id]||[]).filter(function(r){return r&&r.scores})}
+function stat(a){a=a.filter(function(v){return v!=null});if(!a.length)return null;return {m:a.reduce(function(x,y){return x+y},0)/a.length,min:Math.min.apply(null,a),max:Math.max.apply(null,a)}}
+function resetResults(){S.phase1={};S.rounds=[];S.suggestions=[];S.divergences=[];S.synthese=null}
+
+async function runCold(){
+  if(RT.busy)return;
+  if(!CFG.key){flash("Ajoutez d'abord votre clé API dans Réglages.");showTab("reglages");return}
+  var act=active();
+  if(!act.length){flash("Activez au moins une persona.");return}
+  if(!S.stimulus.texte.trim()){flash("Décrivez le stimulus dans l'onglet Concept.");return}
+  var runs=Number(S.settings.runs)||1;
+  RT.busy=true;RT.ctl=new AbortController();RT.status={};
+  resetResults();
+  act.forEach(function(p){RT.status[p.id]={done:0,total:runs,err:0,msg:""}});
+  setBusyUI();renderRunStatus();renderCold();renderFeed();renderChips();
+  var tasks=[];
+  act.forEach(function(p){for(var r=0;r<runs;r++)(function(p){tasks.push(function(){
+    return askJSON(coldPrompt(p),RT.ctl.signal,2500).then(function(j){
+      (S.phase1[p.id]=S.phase1[p.id]||[]).push(cleanCold(j));
+      RT.status[p.id].done++;
+    }).catch(function(e){RT.status[p.id].err++;RT.status[p.id].msg=errMsg(e);throw e}).finally(function(){renderRunStatus();renderCold()});
+  })})(p)});
+  await pool(tasks,4);
+  RT.busy=false;RT.ctl=null;setBusyUI();save();renderRunStatus();renderCold();renderTargets();updateCounts();
+  var errs=Object.keys(RT.status).filter(function(k){return RT.status[k].err});
+  if(errs.length)flash("Certaines réactions ont échoué : "+(RT.status[errs[0]].msg||"erreur")+".");
+}
+function renderRunStatus(){
+  var box=$("#runstatus");
+  var ids=Object.keys(RT.status);
+  box.innerHTML=ids.map(function(id){
+    var s=RT.status[id],p=pById(id);if(!p)return "";
+    var cls=s.err?"err":(s.done>=s.total?"ok":"run");
+    var txt=s.err?"erreur":(s.done>=s.total?"terminé":s.done+"/"+s.total);
+    return '<span class="pill '+cls+'">'+esc(p.name)+' · '+txt+'</span>';
+  }).join("");
+}
+function setBusyUI(){
+  $("#btn-cold").disabled=RT.busy;
+  $("#btn-stop").hidden=!(RT.busy||RT.pending||RT.synthBusy);
+  $("#btn-ask").disabled=!!RT.pending||RT.busy;
+  $("#btn-suggest").disabled=!!RT.pending||RT.busy;
+  $("#btn-synth").disabled=RT.synthBusy;
+  $("#btn-cold").textContent=Object.keys(S.phase1).length?"Relancer (efface la discussion)":"Lancer les réactions à froid";
+}
+
+function bars(id){
+  var rs=runsOf(id);
+  return DIMS.map(function(d){
+    var st=stat(rs.map(function(r){return r.scores[d[0]]}));
+    var range=st&&rs.length>1?" ("+fmt(st.min).replace(",0","")+"–"+fmt(st.max).replace(",0","")+")":"";
+    return '<span>'+d[1]+'</span><span class="track"><span class="fill" style="display:block;width:'+(st?st.m*10:0)+'%"></span></span><span class="val">'+(st?fmt(st.m):"–")+range+'</span>';
+  }).join("");
+}
+function globalStats(){
+  var act=active().filter(function(p){return runsOf(p.id).length});
+  var out={n:act.length,dims:{},int:{oui:0,"peut-etre":0,non:0},runs:0};
+  DIMS.forEach(function(d){
+    var per=act.map(function(p){var s=stat(runsOf(p.id).map(function(r){return r.scores[d[0]]}));return s?s.m:null}).filter(function(v){return v!=null});
+    out.dims[d[0]]=stat(per);
+  });
+  act.forEach(function(p){runsOf(p.id).forEach(function(r){out.int[r.intention]++;out.runs++})});
+  return out;
+}
+function renderCold(){
+  var box=$("#cold");
+  var act=active().filter(function(p){return runsOf(p.id).length});
+  if(!act.length){box.innerHTML='<p class="empty">Aucune réaction pour l\'instant. Lancez les réactions à froid : chaque persona répond seule, sans voir les autres.</p>';return}
+  var g=globalStats();
+  var tiles='<div class="tiles">'+DIMS.map(function(d){var s=g.dims[d[0]];return '<div class="tile"><div class="v">'+fmt(s&&s.m)+'</div><div class="l">'+d[1]+', moyenne sur '+g.n+' persona'+(g.n>1?"s":"")+'</div></div>'}).join("")+
+   '<div class="tile"><div class="v">'+g.int.oui+' · '+g["int"]["peut-etre"]+' · '+g.int.non+'</div><div class="l">Intéressé(e) · hésitant(e) · pas pour moi, sur '+g.runs+' réaction'+(g.runs>1?"s":"")+'</div></div></div>';
+  var cards=act.map(function(p){
+    var i=pidx(p.id),rs=runsOf(p.id),r=rs[0];
+    var ints=rs.map(function(x){return x.intention});
+    var mainInt=["oui","peut-etre","non"].sort(function(a,b){return ints.filter(function(v){return v===b}).length-ints.filter(function(v){return v===a}).length})[0];
+    var stable=rs.length>1&&ints.every(function(v){return v===ints[0]})?"":(rs.length>1?'<span class="pill warn">intention instable</span>':"");
+    return '<article class="card rcard">'+
+     '<header><span class="who"><span class="av" style="background:'+color(i)+'">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</span><span><span class="pill '+intClass(mainInt)+'">'+intLabel(mainInt)+'</span> '+stable+'</span></header>'+
+     '<div class="bars">'+bars(p.id)+'</div>'+
+     (r.verbatim?'<p class="quote">« '+esc(r.verbatim)+' »</p>':'')+
+     '<p>'+esc(r.reaction)+'</p>'+
+     '<p class="sub"><b>Ce qu\'elle a compris :</b> '+esc(r.reformulation)+'</p>'+
+     '<div class="two"><div><h4>Attraits</h4><ul>'+(r.attraits.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")||'<li class="sub">aucun cité</li>')+'</ul></div><div><h4>Freins</h4><ul>'+(r.freins.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")||'<li class="sub">aucun cité</li>')+'</ul></div></div>'+
+     (r.manque?'<p class="sub"><b>Ce qui manque :</b> '+esc(r.manque)+'</p>':'')+
+     (r.reponses.length?'<details><summary>Réponses aux questions ('+r.reponses.length+')</summary><div class="qa">'+r.reponses.map(function(x){return '<div><b>'+esc(x.question)+'</b>'+esc(x.reponse)+'</div>'}).join("")+'</div></details>':'')+
+     (rs.length>1?'<details><summary>Autres tirages ('+(rs.length-1)+')</summary><div class="qa">'+rs.slice(1).map(function(x,k){return '<div><b>Tirage '+(k+2)+' · '+intLabel(x.intention)+' · '+DIMS.map(function(d){return d[1].slice(0,3)+" "+fmt(x.scores[d[0]])}).join(", ")+'</b>'+esc(x.reaction)+'</div>'}).join("")+'</div></details>':'')+
+    '</article>';
+  }).join("");
+  box.innerHTML=tiles+'<div class="grid">'+cards+'</div>';
+}
+
+/* ---------- discussion ---------- */
+function posLabel(p){return p==="changée"?"a changé d'avis":p==="nuancée"?"nuance":"maintient"}
+function normPos(x){var s=String(x||"").toLowerCase().replace(/é/g,"e");return /chang/.test(s)?"changée":/nuanc/.test(s)?"nuancée":"maintenue"}
+function renderTargets(){
+  var sel=$("#ask-target"),cur=sel.value;
+  sel.innerHTML='<option value="tous">Tout le groupe</option>'+active().map(function(p){return '<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>'}).join("");
+  if(cur&&$$("option",sel).some(function(o){return o.value===cur}))sel.value=cur;
+}
+function renderChips(){
+  var box=$("#chips");
+  box.innerHTML=(S.suggestions||[]).map(function(q,i){return '<button type="button" class="chip" data-chip="'+i+'" title="'+esc(q.pourquoi||"")+'">'+esc(q.question)+(q.cible&&q.cible!=="tous"?' <span class="sub">→ '+esc(q.cible)+'</span>':'')+'</button>'}).join("");
+  var d=$("#divergences");
+  if(S.divergences&&S.divergences.length){d.hidden=false;d.innerHTML='<b>Divergences repérées :</b> '+S.divergences.map(esc).join(" · ")}else d.hidden=true;
+}
+function renderFeed(){
+  var box=$("#feed");
+  var html=S.rounds.map(function(r){
+    var replies=r.replies.map(function(x){
+      var p=pById(x.personaId);if(!p)return "";
+      var i=pidx(p.id);
+      if(x.error)return '<p class="silent">'+esc(p.name)+' : réponse indisponible (erreur)</p>';
+      if(!x.intervient||!x.message)return '<p class="silent">'+esc(p.name)+' n\'intervient pas</p>';
+      return '<div class="reply"><span class="av s" style="background:'+color(i)+'">'+esc(initials(p.name))+'</span><div class="bubble"><div class="nm">'+esc(p.name)+' <span class="pill '+(x.position==="changée"?"warn":"")+'">'+posLabel(x.position)+'</span></div>'+esc(x.message)+'</div></div>';
+    }).join("");
+    return '<div class="round"><div class="mod"><span class="tag">Modérateur'+(r.cible&&r.cible!=="tous"?' → '+esc(r.cible):'')+'</span><p>'+esc(r.question)+'</p></div>'+replies+'</div>';
+  }).join("");
+  if(RT.pending){
+    html+='<div class="round"><div class="mod"><span class="tag">Modérateur'+(RT.pending.cible!=="tous"?' → '+esc(RT.pending.cible):'')+'</span><p>'+esc(RT.pending.question)+'</p></div><p class="silent" id="pending-line">Les participants répondent… '+RT.pending.done+'/'+RT.pending.total+'</p></div>';
+  }
+  if(!html)html='<p class="empty">La discussion commence après les réactions à froid. Demandez des relances au modérateur ou posez votre propre question.</p>';
+  box.innerHTML=html;
+}
+async function runRound(question,cible){
+  if(RT.pending||RT.busy)return;
+  var act=active();
+  if(!act.some(function(p){return runsOf(p.id).length})){flash("Lancez d'abord les réactions à froid.");return}
+  question=str(question);if(!question){flash("Écrivez une question.");return}
+  RT.ctl=new AbortController();
+  RT.pending={question:question,cible:cible,done:0,total:act.length};
+  setBusyUI();renderFeed();
+  var tasks=act.map(function(p){return function(){
+    return askJSON(debatePrompt(p,question,cible),RT.ctl.signal,1200).then(function(j){
+      return {personaId:p.id,intervient:j.intervient!==false&&j.intervient!=="false",message:str(j.message),position:normPos(j.position)};
+    });
+  }});
+  var res=await pool(tasks,4,function(){RT.pending.done++;var l=$("#pending-line");if(l)l.textContent="Les participants répondent… "+RT.pending.done+"/"+RT.pending.total});
+  var aborted=RT.ctl&&RT.ctl.signal.aborted;
+  var round={id:uid(),question:question,cible:cible,replies:[]};
+  res.forEach(function(r,i){round.replies.push(r&&r.__err?{personaId:act[i].id,error:true,intervient:false,message:"",position:"maintenue"}:r)});
+  var failed=round.replies.filter(function(r){return r.error}).length;
+  RT.pending=null;RT.ctl=null;
+  if(!aborted&&failed<round.replies.length){round.replies=shuffle(round.replies);S.rounds.push(round);$("#ask-input").value="";save()}
+  else if(!aborted){flash("Aucune réponse n'a pu être obtenue. "+errMsg(res[0]&&res[0].__err))}
+  setBusyUI();renderFeed();updateCounts();
+  if(failed&&failed<round.replies.length)flash(failed+" participant(s) n'ont pas pu répondre.");
+}
+async function suggest(){
+  if(!active().some(function(p){return runsOf(p.id).length})){flash("Lancez d'abord les réactions à froid.");return}
+  var b=$("#btn-suggest");b.disabled=true;b.textContent="Le modérateur réfléchit…";
+  try{
+    var j=await askJSON(suggestPrompt(),null,1800);
+    S.suggestions=(j.questions||[]).map(function(q){return {question:str(q.question),cible:str(q.cible)||"tous",pourquoi:str(q.pourquoi)}}).filter(function(q){return q.question});
+    S.divergences=arr(j.divergences);
+    save();renderChips();
+  }catch(e){flash(errMsg(e))}
+  b.disabled=false;b.textContent="Suggérer des relances";
+}
+
+/* ---------- synthèse ---------- */
+function convStats(){
+  var tot=0,sil=0,cnt={maintenue:0,"nuancée":0,"changée":0},n=0;
+  S.rounds.forEach(function(r){r.replies.forEach(function(x){if(x.error)return;n++;if(!x.intervient||!x.message)sil++;else{tot++;cnt[x.position]=(cnt[x.position]||0)+1}})});
+  return {n:n,tot:tot,sil:sil,cnt:cnt};
+}
+async function runSynth(){
+  if(!active().some(function(p){return runsOf(p.id).length})){flash("Lancez d'abord les réactions à froid.");return}
+  RT.synthBusy=true;RT.ctl=new AbortController();setBusyUI();
+  $("#synth-status").innerHTML='<span class="pill run">Synthèse en cours…</span>';
+  try{
+    var j=await askJSON(synthPrompt(),RT.ctl.signal,5000);
+    S.synthese={data:j,rounds:S.rounds.length,at:Date.now()};
+    save();
+  }catch(e){flash(errMsg(e))}
+  RT.synthBusy=false;RT.ctl=null;setBusyUI();renderSynth();
+}
+function list(a){a=arr(a);return a.length?'<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul>':'<p class="sub">Rien à signaler.</p>'}
+function renderSynth(){
+  var box=$("#synth"),st=$("#synth-status");
+  st.innerHTML="";
+  var g=globalStats();
+  if(!g.n){box.innerHTML='<p class="empty">La synthèse apparaît ici après les réactions à froid. Ajoutez la discussion pour un résultat plus riche.</p>';return}
+  var c=convStats();
+  var tiles='<div class="tiles">'+
+   '<div class="tile"><div class="v">'+g.n+'</div><div class="l">personas ayant réagi, '+g.runs+' réaction'+(g.runs>1?"s":"")+' au total</div></div>'+
+   '<div class="tile"><div class="v">'+fmt(g.dims.attrait&&g.dims.attrait.m)+'</div><div class="l">Attrait moyen (de '+fmt(g.dims.attrait&&g.dims.attrait.min)+' à '+fmt(g.dims.attrait&&g.dims.attrait.max)+' selon la persona)</div></div>'+
+   '<div class="tile"><div class="v">'+g.int.oui+' · '+g["int"]["peut-etre"]+' · '+g.int.non+'</div><div class="l">Intéressé(e) · hésitant(e) · pas pour moi</div></div>'+
+   '<div class="tile"><div class="v">'+S.rounds.length+'</div><div class="l">tours de discussion, '+c.tot+' interventions</div></div>'+
+   '<div class="tile"><div class="v">'+(c.tot?Math.round(100*c.cnt["changée"]/c.tot)+" %":"–")+'</div><div class="l">des interventions où la persona dit avoir changé d\'avis. Un taux élevé peut signaler de la complaisance.</div></div>'+
+   '<div class="tile"><div class="v">'+(c.n?Math.round(100*c.sil/c.n)+" %":"–")+'</div><div class="l">de silences (la persona ne se sent pas concernée)</div></div>'+
+  '</div>';
+  var body="";
+  var sy=S.synthese;
+  if(sy&&sy.data){
+    var d=sy.data;
+    var stale=sy.rounds!==S.rounds.length?'<div class="notice"><b>Synthèse à actualiser.</b> La discussion a changé depuis sa production.</div>':"";
+    body=stale+
+     '<div class="card sec"><h2>À retenir</h2><p>'+esc(d.resume)+'</p></div>'+
+     '<div class="card sec"><h3>Verdict par persona</h3><div class="scroll"><table><thead><tr><th>Persona</th><th>Intention</th><th>Pourquoi</th></tr></thead><tbody>'+
+       (d.verdict_par_persona||[]).map(function(v){var i=normInt(v.intention);return '<tr><td>'+esc(v.nom)+'</td><td><span class="pill '+intClass(i)+'">'+intLabel(i)+'</span></td><td>'+esc(v.pourquoi)+'</td></tr>'}).join("")+'</tbody></table></div></div>'+
+     '<div class="grid"><div class="card sec"><h3>Points de consensus</h3>'+list(d.consensus)+'</div><div class="card sec"><h3>Ce qui attire</h3>'+list(d.attraits)+'</div></div>'+
+     '<div class="card sec"><h3>Divergences</h3>'+((d.divergences||[]).map(function(x){return '<div><b>'+esc(x.sujet)+'</b><ul>'+(x.positions||[]).map(function(p){return '<li><b>'+esc(p.nom)+'</b> : '+esc(p.position)+'</li>'}).join("")+'</ul></div>'}).join("")||'<p class="sub">Rien à signaler.</p>')+'</div>'+
+     '<div class="card sec"><h3>Objections</h3><div class="scroll"><table><thead><tr><th>Objection</th><th>Portée</th><th>Personas</th></tr></thead><tbody>'+
+       (d.objections||[]).map(function(o){return '<tr><td>'+esc(o.objection)+'</td><td>'+esc(o.portee)+'</td><td>'+esc(arr(o.personas).join(", "))+'</td></tr>'}).join("")+'</tbody></table></div></div>'+
+     '<div class="card sec"><h3>Verbatims</h3>'+((d.verbatims||[]).map(function(v){return '<p class="quote">« '+esc(v.citation)+' » <span class="sub">— '+esc(v.nom)+'</span></p>'}).join("")||'<p class="sub">Aucun.</p>')+'</div>'+
+     '<div class="card sec"><h3>Hypothèses à valider avec de vrais utilisateurs</h3><div class="scroll"><table><thead><tr><th>Hypothèse</th><th>Comment la valider</th></tr></thead><tbody>'+
+       (d.hypotheses_a_valider||[]).map(function(h){return '<tr><td>'+esc(h.hypothese)+'</td><td>'+esc(h.comment_valider)+'</td></tr>'}).join("")+'</tbody></table></div></div>'+
+     '<div class="card sec"><h3>Pistes</h3>'+list(d.pistes)+'</div>'+
+     '<div class="notice"><b>Fiabilité.</b> '+esc(d.fiabilite)+'</div>';
+  }else{
+    body='<p class="empty">Cliquez sur « Produire la synthèse » pour obtenir consensus, divergences, objections et hypothèses à valider.</p>';
+  }
+  box.innerHTML=tiles+body;
+}
+
+/* ---------- rapport et exports ---------- */
+function buildReport(){
+  var st=S.stimulus,g=globalStats(),L=[];
+  L.push("# Focus group synthétique : "+(st.titre||"sans titre"));
+  L.push("");L.push("> Session simulée : les participants sont des personae jouées par un modèle de langage. Les résultats sont des hypothèses à valider avec de vrais utilisateurs.");
+  L.push("");L.push("## Stimulus");L.push("Type : "+(TYPE_LABEL[st.type]||"Concept"));
+  if(st.contexte)L.push("Contexte : "+st.contexte);
+  L.push("");L.push(st.texte);
+  L.push("");L.push("## Réactions à froid");
+  L.push("");L.push("| Persona | Intention | "+DIMS.map(function(d){return d[1]}).join(" | ")+" |");
+  L.push("|---|---|"+DIMS.map(function(){return "---"}).join("|")+"|");
+  active().forEach(function(p){
+    var rs=runsOf(p.id);if(!rs.length)return;
+    L.push("| "+p.name+" | "+intLabel(rs[0].intention)+" | "+DIMS.map(function(d){var s=stat(rs.map(function(r){return r.scores[d[0]]}));return s?fmt(s.m):"–"}).join(" | ")+" |");
+  });
+  active().forEach(function(p){
+    var r=firstRun(p.id);if(!r)return;
+    L.push("");L.push("### "+p.name);L.push(r.reaction);
+    if(r.verbatim)L.push("");if(r.verbatim)L.push("> « "+r.verbatim+" »");
+    if(r.attraits.length)L.push("");if(r.attraits.length)L.push("Attraits : "+r.attraits.join(" ; "));
+    if(r.freins.length)L.push("Freins : "+r.freins.join(" ; "));
+    if(r.manque)L.push("Ce qui manque : "+r.manque);
+  });
+  if(S.rounds.length){
+    L.push("");L.push("## Discussion");
+    S.rounds.forEach(function(r){
+      L.push("");L.push("**Modérateur"+(r.cible&&r.cible!=="tous"?" → "+r.cible:"")+" :** "+r.question);
+      r.replies.forEach(function(x){if(x.intervient&&x.message){var p=pById(x.personaId);L.push("- **"+(p?p.name:"?")+"** ("+posLabel(x.position)+") : "+x.message)}});
+    });
+  }
+  var sy=S.synthese&&S.synthese.data;
+  if(sy){
+    L.push("");L.push("## Synthèse");L.push("");L.push(sy.resume||"");
+    var sec=function(t,a){a=arr(a);if(a.length){L.push("");L.push("### "+t);a.forEach(function(x){L.push("- "+x)})}};
+    sec("Consensus",sy.consensus);sec("Ce qui attire",sy.attraits);
+    if((sy.divergences||[]).length){L.push("");L.push("### Divergences");sy.divergences.forEach(function(x){L.push("- **"+x.sujet+"** : "+(x.positions||[]).map(function(p){return p.nom+" : "+p.position}).join(" ; "))})}
+    if((sy.objections||[]).length){L.push("");L.push("### Objections");sy.objections.forEach(function(o){L.push("- "+o.objection+" ("+o.portee+" ; "+arr(o.personas).join(", ")+")")})}
+    if((sy.verbatims||[]).length){L.push("");L.push("### Verbatims");sy.verbatims.forEach(function(v){L.push("> « "+v.citation+" » — "+v.nom)})}
+    if((sy.hypotheses_a_valider||[]).length){L.push("");L.push("### Hypothèses à valider");sy.hypotheses_a_valider.forEach(function(h){L.push("- "+h.hypothese+" → "+h.comment_valider)})}
+    sec("Pistes",sy.pistes);
+    L.push("");L.push("### Fiabilité");L.push(sy.fiabilite||"");
+  }
+  return L.join("\n");
+}
+async function saveFile(name,data){
+  try{
+    var type=/\.json$/.test(name)?"application/json":"text/markdown";
+    var blob=new Blob([data],{type:type+";charset=utf-8"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url)},1000);
+    flash("Fichier téléchargé.");
+  }catch(e){flash("Export impossible : "+((e&&e.message)||"erreur"))}
+}
+function slug(){return (S.stimulus.titre||"session").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"session"}
+
+/* ---------- compteurs ---------- */
+function updateCounts(){
+  $("#n-personas").textContent=active().length;
+  $("#n-session").textContent=S.rounds.length;
+  updateCallHint();
+  setBusyUI();
+}
+
+/* ---------- actions ---------- */
+document.addEventListener("click",async function(e){
+  var chip=e.target.closest("[data-chip]");
+  if(chip){
+    var q=S.suggestions[Number(chip.dataset.chip)];
+    if(q){$("#ask-input").value=q.question;renderTargets();var sel=$("#ask-target");sel.value=$$("option",sel).some(function(o){return o.value===q.cible})?q.cible:"tous";$("#ask-input").focus()}
+    return;
+  }
+  var tb=e.target.closest("[data-tab]");if(tb){showTab(tb.dataset.tab);return}
+  var go=e.target.closest("[data-goto]");if(go){showTab(go.dataset.goto);return}
+  var b=e.target.closest("[data-action]");if(!b)return;
+  var a=b.dataset.action;
+  if(a==="add-persona"){
+    var p={id:uid(),name:"Nouvelle persona",fiche:FICHE_TEMPLATE,actif:true,exemple:false};
+    S.personas.push(p);save();renderPersonas();var i=$("#pn-"+p.id);if(i){i.focus();i.select()}
+  }else if(a==="del-persona"){
+    var id=b.closest("article").dataset.id;
+    S.personas=S.personas.filter(function(x){return x.id!==id});delete S.phase1[id];save();renderPersonas();renderCold();
+  }else if(a==="clear-examples"){
+    S.personas=S.personas.filter(function(x){return !x.exemple});save();renderPersonas();
+  }else if(a==="preset"){
+    S.stimulus.questions=PRESETS[b.dataset.preset].slice();S.stimulus.type=b.dataset.preset;save();renderStimulus();
+  }else if(a==="import-raw"){
+    var t=$("#import-text").value.trim();
+    if(!t){$("#import-msg").textContent="Collez d'abord du texte.";return}
+    var ps=parseRawPersonas(t);S.personas=S.personas.filter(function(x){return !x.exemple}).concat(ps);
+    $("#import-text").value="";$("#import-msg").textContent=ps.length+" persona"+(ps.length>1?"s":"")+" importée"+(ps.length>1?"s":"")+".";save();renderPersonas();
+  }else if(a==="import-structure"){
+    var t2=$("#import-text").value.trim();
+    if(!t2){$("#import-msg").textContent="Collez d'abord du texte.";return}
+    b.disabled=true;$("#import-msg").textContent="Claude structure les fiches…";
+    try{
+      var j=await askJSON("Tu reçois des descriptions de personae (profils utilisateurs), parfois désordonnées, séparées ou non par des lignes ---. Range chaque persona dans la fiche ci-dessous, en conservant TOUTES les informations d'origine et sans rien inventer. Si un bloc n'est pas renseigné dans la source, écris « non précisé ».\n\nBlocs de la fiche, dans cet ordre : Identité et contexte ; Rapport au sujet testé ; Motivations ; Freins et peurs ; Valeurs et critères de décision ; Style de communication ; Biais assumés ; Contradictions ; Citations types.\n\nRéponds uniquement par un JSON : [{\"name\": \"nom de la persona\", \"fiche\": \"texte de la fiche, un bloc par paragraphe, chaque bloc commençant par son titre suivi de deux-points\"}]\n\nSOURCE :\n"+t2,null,8000);
+      var list2=(Array.isArray(j)?j:(j.personas||[])).map(function(x){return {id:uid(),name:str(x.name)||"Sans nom",fiche:String(x.fiche||""),actif:true,exemple:false}});
+      S.personas=S.personas.filter(function(x){return !x.exemple}).concat(list2);
+      $("#import-text").value="";$("#import-msg").textContent=list2.length+" persona(s) structurée(s). Relisez les fiches avant de lancer une session.";save();renderPersonas();
+    }catch(err){$("#import-msg").textContent=errMsg(err)}
+    b.disabled=false;
+  }else if(a==="export-personas"){
+    saveFile("personas.json",JSON.stringify(S.personas.map(function(p){return {name:p.name,fiche:p.fiche}}),null,2));
+  }else if(a==="export-json"){
+    saveFile("focus-group-"+slug()+".json",JSON.stringify(S,null,2));
+  }else if(a==="run-cold"){runCold()}
+  else if(a==="stop"){if(RT.ctl)RT.ctl.abort()}
+  else if(a==="suggest"){suggest()}
+  else if(a==="go-synthese"){showTab("synthese")}
+  else if(a==="run-synth"){runSynth()}
+  else if(a==="export-md"){saveFile("rapport-"+slug()+".md",buildReport())}
+  else if(a==="copy-md"){
+    try{await navigator.clipboard.writeText(buildReport());flash("Rapport copié.")}catch(err){flash("Copie refusée par le navigateur. Utilisez le téléchargement.")}
+  }else if(a==="test-api"){testApi(b)}else if(a==="forget-key"){forgetKey()}else if(a==="lock"){try{sessionStorage.removeItem("fgs.pw")}catch(err){}location.reload()}else if(a==="reset-session"){
+    if(b.dataset.armed){resetResults();save();b.textContent="Effacer les résultats";delete b.dataset.armed;renderCold();renderFeed();renderChips();renderRunStatus();updateCounts()}
+    else{b.dataset.armed="1";b.textContent="Confirmer l'effacement";setTimeout(function(){if(b.dataset.armed){delete b.dataset.armed;b.textContent="Effacer les résultats"}},4000)}
+  }
+});
+$("#askform").addEventListener("submit",function(e){e.preventDefault();runRound($("#ask-input").value,$("#ask-target").value)});
+$("#set-runs").addEventListener("change",function(e){S.settings.runs=Number(e.target.value);save();updateCallHint()});
+$("#set-tier").addEventListener("change",function(e){S.settings.tier=e.target.value;save()});
+$("#set-share").addEventListener("change",function(e){S.settings.share=e.target.checked;save()});
+$("#file-import").addEventListener("change",function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var j=JSON.parse(rd.result);
+      if(Array.isArray(j)){
+        S.personas=S.personas.filter(function(x){return !x.exemple}).concat(j.map(function(x){return {id:uid(),name:str(x.name)||"Sans nom",fiche:String(x.fiche||""),actif:true,exemple:false}}));
+      }else{S=mergeState(null,j)}
+      save();init();flash("Import terminé.");
+    }catch(err){flash("Fichier JSON illisible.")}
+  };
+  rd.readAsText(f);e.target.value="";
+});
+$("#api-key").addEventListener("input",function(e){CFG.key=e.target.value.trim();saveCfg();updateKeyNotice()});
+[["quick","#m-quick"],["default","#m-default"],["complex","#m-complex"]].forEach(function(m){
+  $(m[1]).addEventListener("input",function(e){CFG.models[m[0]]=e.target.value.trim()||CFG.models[m[0]];saveCfg()});
+});
+window.addEventListener("beforeunload",function(){try{localStorage.setItem("fgs.v1",JSON.stringify(S))}catch(e){}});
+
+/* ---------- démarrage ---------- */
+function init(){
+  $("#set-runs").value=String(S.settings.runs);
+  $("#set-tier").value=S.settings.tier;
+  $("#set-share").checked=!!S.settings.share;
+  $("#api-key").value=CFG.key;
+  $("#m-quick").value=CFG.models.quick;$("#m-default").value=CFG.models["default"];$("#m-complex").value=CFG.models.complex;
+  updateKeyNotice();updateCalls();
+  renderPersonas();renderStimulus();renderTargets();renderCold();renderFeed();renderChips();renderRunStatus();renderSynth();updateCounts();
+}
+init();
+var h=location.hash.slice(1);showTab(TABS.indexOf(h)>=0?h:"personas");
+})();
+</script>
+</body>
+</html>

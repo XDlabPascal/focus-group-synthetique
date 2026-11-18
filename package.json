@@ -1,0 +1,13 @@
+{
+  "name": "focus-group-synthetique",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Focus group synthétique : des personae réagissent à un concept ou à une proposition de valeur.",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
