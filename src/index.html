@@ -148,6 +148,7 @@ img.av{object-fit:cover;background:var(--soft)}
 .ph-row{gap:6px}
 .pp summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:500}
 .pp textarea{font-size:12px;margin-top:6px}
+.vn{display:inline-flex;align-items:center;gap:8px}
 .print-only{display:none}
 @media print{
   :root:root:root{--bg:#ffffff;--surface:#ffffff;--ink:#14161d;--muted:#4a5060;--line:#cfd3dc;--accent:#2f3fc4;--soft:#eef0fb;--good:#14704a;--warn:#8a5400;--bad:#a42e22;color-scheme:light}
@@ -854,7 +855,7 @@ function renderSynth(){
     body=stale+
      '<div class="card sec"><h2>À retenir</h2><p>'+esc(d.resume)+'</p></div>'+
      '<div class="card sec"><h3>Verdict par persona</h3><div class="scroll"><table><thead><tr><th>Persona</th><th>Intention</th><th>Pourquoi</th></tr></thead><tbody>'+
-       (d.verdict_par_persona||[]).map(function(v){var i=normInt(v.intention);return '<tr><td>'+esc(v.nom)+'</td><td><span class="pill '+intClass(i)+'">'+intLabel(i)+'</span></td><td>'+esc(v.pourquoi)+'</td></tr>'}).join("")+'</tbody></table></div></div>'+
+       (d.verdict_par_persona||[]).map(function(v){var i=normInt(v.intention);var pv=personaByName(v.nom);var who=pv?'<span class="vn">'+avatar(pv,pidx(pv.id),true)+'<span>'+esc(v.nom)+'</span></span>':esc(v.nom);return '<tr><td>'+who+'</td><td><span class="pill '+intClass(i)+'">'+intLabel(i)+'</span></td><td>'+esc(v.pourquoi)+'</td></tr>'}).join("")+'</tbody></table></div></div>'+
      '<div class="grid"><div class="card sec"><h3>Points de consensus</h3>'+list(d.consensus)+'</div><div class="card sec"><h3>Ce qui attire</h3>'+list(d.attraits)+'</div></div>'+
      '<div class="card sec"><h3>Divergences</h3>'+((d.divergences||[]).map(function(x){return '<div><b>'+esc(x.sujet)+'</b><ul>'+(x.positions||[]).map(function(p){return '<li><b>'+esc(p.nom)+'</b> : '+esc(p.position)+'</li>'}).join("")+'</ul></div>'}).join("")||'<p class="sub">Rien à signaler.</p>')+'</div>'+
      '<div class="card sec"><h3>Objections</h3><div class="scroll"><table><thead><tr><th>Objection</th><th>Portée</th><th>Personas</th></tr></thead><tbody>'+
@@ -945,6 +946,7 @@ function slug(){return (S.stimulus.titre||"session").toLowerCase().normalize("NF
 
 /* ---------- portraits ---------- */
 var photoTarget=null;
+function personaByName(n){n=str(n).toLowerCase();return S.personas.find(function(p){return str(p.name).toLowerCase()===n})}
 function cleanPhoto(x){return typeof x==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(x)&&x.length<400000?x:undefined}
 function avatar(p,i,small){
   var cls="av"+(small?" s":"");
