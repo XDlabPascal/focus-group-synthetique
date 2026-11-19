@@ -140,6 +140,9 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
   .bars{grid-template-columns:80px 1fr 64px}
 }
 @media (prefers-reduced-motion:no-preference){.fill{transition:width .3s}}
+.hdr-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.hdr-actions .row{justify-content:flex-end}
+@media (max-width:640px){.hdr-actions{align-items:flex-start}.hdr-actions .row{justify-content:flex-start}}
 .print-only{display:none}
 @media print{
   :root:root:root{--bg:#ffffff;--surface:#ffffff;--ink:#14161d;--muted:#4a5060;--line:#cfd3dc;--accent:#2f3fc4;--soft:#eef0fb;--good:#14704a;--warn:#8a5400;--bad:#a42e22;color-scheme:light}
@@ -178,11 +181,13 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
       <h1>Focus group synthétique</h1>
       <p>Vos personae réagissent à un concept ou à une proposition de valeur, chacune de son côté, puis en discussion. À lire comme des hypothèses à valider avec de vrais utilisateurs.</p>
     </div>
-    <div class="row">
-      <button class="btn ghost small" data-action="export-json">Exporter la session (JSON)</button>
+    <div class="hdr-actions">
       <button class="btn ghost small" data-action="lock">Verrouiller</button>
-      <label class="btn ghost small" for="file-import" style="cursor:pointer">Importer un JSON</label>
-      <input id="file-import" type="file" accept=".json,application/json" hidden>
+      <div class="row">
+        <button class="btn ghost small" data-action="export-json">Exporter la session (JSON)</button>
+        <label class="btn ghost small" for="file-import" style="cursor:pointer">Importer un JSON</label>
+        <input id="file-import" type="file" accept=".json,application/json" hidden>
+      </div>
     </div>
   </header>
   <div id="print-head" class="print-only"></div>
@@ -204,7 +209,6 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
         <button class="btn ghost" data-action="clear-examples" id="btn-clear-examples">Retirer les exemples</button>
       </div>
     </div>
-    <div class="grid" id="personas-grid"></div>
     <details class="box">
       <summary>Importer vos personae existantes</summary>
       <div class="inner">
@@ -218,6 +222,7 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
         </div>
       </div>
     </details>
+    <div class="grid" id="personas-grid"></div>
   </section>
 
   <!-- CONCEPT -->
