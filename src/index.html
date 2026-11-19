@@ -140,6 +140,35 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
   .bars{grid-template-columns:80px 1fr 64px}
 }
 @media (prefers-reduced-motion:no-preference){.fill{transition:width .3s}}
+.print-only{display:none}
+@media print{
+  :root:root:root{--bg:#ffffff;--surface:#ffffff;--ink:#14161d;--muted:#4a5060;--line:#cfd3dc;--accent:#2f3fc4;--soft:#eef0fb;--good:#14704a;--warn:#8a5400;--bad:#a42e22;color-scheme:light}
+  @page{margin:15mm}
+  html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-size:12px}
+  .toast{display:none!important}
+  body.printing-synth header.top,
+  body.printing-synth .tabs,
+  body.printing-synth #no-claude,
+  body.printing-synth #panel-personas,
+  body.printing-synth #panel-concept,
+  body.printing-synth #panel-session,
+  body.printing-synth #panel-reglages,
+  body.printing-synth #panel-synthese>.row,
+  body.printing-synth #synth-status{display:none!important}
+  body.printing-synth .print-only{display:block}
+  body.printing-synth .wrap{max-width:none;padding:0}
+  body.printing-synth .print-only h1{font-size:22px}
+  body.printing-synth .print-only .meta{color:var(--muted);margin:4px 0 10px}
+  body.printing-synth .print-only .stim{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:10px 0}
+  body.printing-synth .print-only .stim p{white-space:pre-line}
+  body.printing-synth .print-only .sim{color:var(--muted);font-size:11px;margin-bottom:14px}
+  body.printing-synth .tiles{grid-template-columns:repeat(3,1fr)}
+  body.printing-synth .grid{grid-template-columns:1fr 1fr}
+  body.printing-synth .scroll{overflow:visible}
+  body.printing-synth .card,body.printing-synth .tile,body.printing-synth .notice,body.printing-synth tr,body.printing-synth .quote{break-inside:avoid}
+  body.printing-synth h2,body.printing-synth h3{break-after:avoid}
+}
 </style>
 </head>
 <body>
@@ -156,6 +185,7 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
       <input id="file-import" type="file" accept=".json,application/json" hidden>
     </div>
   </header>
+  <div id="print-head" class="print-only"></div>
 
   <nav class="tabs" role="tablist" aria-label="Étapes">
     <button role="tab" id="tab-personas" data-tab="personas" aria-selected="true">1. Personas <span class="n" id="n-personas">0</span></button>
@@ -273,6 +303,7 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
       <p class="hint" style="max-width:70ch">La synthèse lit les réactions à froid et la discussion. Les chiffres des tuiles sont calculés ici, sur les notes et les positions déclarées, pas par Claude.</p>
       <div class="row">
         <button class="btn" data-action="run-synth" id="btn-synth">Produire la synthèse</button>
+        <button class="btn ghost" data-action="export-pdf">Exporter en PDF</button>
         <button class="btn ghost" data-action="export-md">Télécharger le rapport (.md)</button>
         <button class="btn ghost" data-action="copy-md">Copier le rapport</button>
       </div>
@@ -871,6 +902,23 @@ function buildReport(){
   }
   return L.join("\n");
 }
+function exportPdf(){
+  if(!(S.synthese&&S.synthese.data)){flash("Produisez d'abord la synthèse, puis exportez-la en PDF.");return}
+  showTab("synthese");
+  var st=S.stimulus;
+  var names=active().map(function(p){return p.name}).join(", ");
+  var date=new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+  $("#print-head").innerHTML='<h1>Focus group synthétique : '+esc(st.titre||"sans titre")+'</h1>'+
+    '<p class="meta">'+esc(date)+' · '+esc(TYPE_LABEL[st.type]||"Concept")+' · Personas : '+esc(names)+'</p>'+
+    '<div class="stim"><h4>Stimulus testé</h4><p>'+esc(st.texte)+'</p>'+(st.contexte?'<p class="sub">Contexte : '+esc(st.contexte)+'</p>':'')+'</div>'+
+    '<p class="sim">Session simulée : les participants sont des personae jouées par un modèle de langage. Les résultats sont des hypothèses à valider avec de vrais utilisateurs.</p>';
+  var oldTitle=document.title;
+  document.title="Synthèse - "+(st.titre||"focus group");
+  document.body.classList.add("printing-synth");
+  var done=function(){document.title=oldTitle;document.body.classList.remove("printing-synth");window.removeEventListener("afterprint",done)};
+  window.addEventListener("afterprint",done);
+  setTimeout(function(){try{window.print()}catch(e){done();flash("Impression impossible dans ce navigateur.")}},60);
+}
 async function saveFile(name,data){
   try{
     var type=/\.json$/.test(name)?"application/json":"text/markdown";
@@ -938,6 +986,7 @@ document.addEventListener("click",async function(e){
   else if(a==="suggest"){suggest()}
   else if(a==="go-synthese"){showTab("synthese")}
   else if(a==="run-synth"){runSynth()}
+  else if(a==="export-pdf"){exportPdf()}
   else if(a==="export-md"){saveFile("rapport-"+slug()+".md",buildReport())}
   else if(a==="copy-md"){
     try{await navigator.clipboard.writeText(buildReport());flash("Rapport copié.")}catch(err){flash("Copie refusée par le navigateur. Utilisez le téléchargement.")}
