@@ -143,6 +143,11 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
 .hdr-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .hdr-actions .row{justify-content:flex-end}
 @media (max-width:640px){.hdr-actions{align-items:flex-start}.hdr-actions .row{justify-content:flex-start}}
+img.av{object-fit:cover;background:var(--soft)}
+.pcard header .av{width:44px;height:44px;font-size:15px}
+.ph-row{gap:6px}
+.pp summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:500}
+.pp textarea{font-size:12px;margin-top:6px}
 .print-only{display:none}
 @media print{
   :root:root:root{--bg:#ffffff;--surface:#ffffff;--ink:#14161d;--muted:#4a5060;--line:#cfd3dc;--accent:#2f3fc4;--soft:#eef0fb;--good:#14704a;--warn:#8a5400;--bad:#a42e22;color-scheme:light}
@@ -187,6 +192,7 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute
         <button class="btn ghost small" data-action="export-json">Exporter la session (JSON)</button>
         <label class="btn ghost small" for="file-import" style="cursor:pointer">Importer un JSON</label>
         <input id="file-import" type="file" accept=".json,application/json" hidden>
+        <input id="photo-input" type="file" accept="image/*" hidden>
       </div>
     </div>
   </header>
@@ -390,7 +396,7 @@ function defaultState(){return {
 function mergeState(d,l){
   var s=defaultState();
   if(!l||typeof l!=="object")return s;
-  if(Array.isArray(l.personas))s.personas=l.personas.map(function(p){return {id:p.id||uid(),name:str(p.name)||"Sans nom",fiche:String(p.fiche||""),actif:p.actif!==false,exemple:!!p.exemple}});
+  if(Array.isArray(l.personas))s.personas=l.personas.map(function(p){return {id:p.id||uid(),name:str(p.name)||"Sans nom",fiche:String(p.fiche||""),actif:p.actif!==false,exemple:!!p.exemple,photo:cleanPhoto(p.photo),portraitPrompt:str(p.portraitPrompt)}});
   if(l.stimulus)s.stimulus=Object.assign(s.stimulus,l.stimulus);
   if(l.settings)s.settings=Object.assign(s.settings,l.settings);
   ["phase1"].forEach(function(k){if(l[k]&&typeof l[k]==="object")s[k]=l[k]});
@@ -503,10 +509,12 @@ function renderPersonas(){
   var box=$("#personas-grid");
   box.innerHTML=S.personas.length?S.personas.map(function(p,i){return ''+
   '<article class="card pcard" data-id="'+p.id+'">'+
-   '<header><span class="av" style="background:'+color(i)+'">'+esc(initials(p.name))+'</span>'+
+   '<header>'+avatar(p,i,false)+
    '<input type="text" class="pname" data-field="name" id="pn-'+p.id+'" value="'+esc(p.name)+'" aria-label="Nom de la persona" autocomplete="off">'+
    (p.exemple?'<span class="tag">Exemple</span>':'')+'</header>'+
    '<textarea data-field="fiche" id="pf-'+p.id+'" rows="14" aria-label="Fiche de '+esc(p.name)+'">'+esc(p.fiche)+'</textarea>'+
+   '<div class="row ph-row"><button class="btn ghost small" data-action="photo-add">'+(p.photo?'Changer le portrait':'Ajouter un portrait')+'</button>'+(p.photo?'<button class="btn ghost small" data-action="photo-del">Retirer</button>':'')+'<button class="btn ghost small" data-action="photo-prompt">Prompt de portrait</button></div>'+
+   (p.portraitPrompt?'<details class="pp" open><summary>Prompt de portrait fictif</summary><textarea readonly rows="5" aria-label="Prompt de portrait">'+esc(p.portraitPrompt)+'</textarea></details>':'')+
    '<footer><label class="chk"><input type="checkbox" data-field="actif" '+(p.actif!==false?'checked':'')+'> Participe aux sessions</label>'+
    '<button class="btn ghost small danger" data-action="del-persona">Supprimer</button></footer>'+
   '</article>'}).join(''):'<p class="empty">Aucune persona. Ajoutez-en une ou importez vos fiches.</p>';
@@ -517,7 +525,7 @@ $("#personas-grid").addEventListener("input",function(e){
   var a=e.target.closest("article");if(!a)return;
   var p=pById(a.dataset.id);if(!p)return;
   var f=e.target.dataset.field;
-  if(f==="name"){p.name=e.target.value;var av=$(".av",a);av.textContent=initials(p.name)}
+  if(f==="name"){p.name=e.target.value;var av=$(".av",a);if(av&&av.tagName!=="IMG")av.textContent=initials(p.name)}
   if(f==="fiche")p.fiche=e.target.value;
   p.exemple=false;var tg=$(".tag",a);if(tg)tg.remove();
   save();
@@ -724,7 +732,7 @@ function renderCold(){
     var mainInt=["oui","peut-etre","non"].sort(function(a,b){return ints.filter(function(v){return v===b}).length-ints.filter(function(v){return v===a}).length})[0];
     var stable=rs.length>1&&ints.every(function(v){return v===ints[0]})?"":(rs.length>1?'<span class="pill warn">intention instable</span>':"");
     return '<article class="card rcard">'+
-     '<header><span class="who"><span class="av" style="background:'+color(i)+'">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</span><span><span class="pill '+intClass(mainInt)+'">'+intLabel(mainInt)+'</span> '+stable+'</span></header>'+
+     '<header><span class="who">'+avatar(p,i,false)+esc(p.name)+'</span><span><span class="pill '+intClass(mainInt)+'">'+intLabel(mainInt)+'</span> '+stable+'</span></header>'+
      '<div class="bars">'+bars(p.id)+'</div>'+
      (r.verbatim?'<p class="quote">« '+esc(r.verbatim)+' »</p>':'')+
      '<p>'+esc(r.reaction)+'</p>'+
@@ -760,7 +768,7 @@ function renderFeed(){
       var i=pidx(p.id);
       if(x.error)return '<p class="silent">'+esc(p.name)+' : réponse indisponible (erreur)</p>';
       if(!x.intervient||!x.message)return '<p class="silent">'+esc(p.name)+' n\'intervient pas</p>';
-      return '<div class="reply"><span class="av s" style="background:'+color(i)+'">'+esc(initials(p.name))+'</span><div class="bubble"><div class="nm">'+esc(p.name)+' <span class="pill '+(x.position==="changée"?"warn":"")+'">'+posLabel(x.position)+'</span></div>'+esc(x.message)+'</div></div>';
+      return '<div class="reply">'+avatar(p,i,true)+'<div class="bubble"><div class="nm">'+esc(p.name)+' <span class="pill '+(x.position==="changée"?"warn":"")+'">'+posLabel(x.position)+'</span></div>'+esc(x.message)+'</div></div>';
     }).join("");
     return '<div class="round"><div class="mod"><span class="tag">Modérateur'+(r.cible&&r.cible!=="tous"?' → '+esc(r.cible):'')+'</span><p>'+esc(r.question)+'</p></div>'+replies+'</div>';
   }).join("");
@@ -935,6 +943,42 @@ async function saveFile(name,data){
 }
 function slug(){return (S.stimulus.titre||"session").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"session"}
 
+/* ---------- portraits ---------- */
+var photoTarget=null;
+function cleanPhoto(x){return typeof x==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(x)&&x.length<400000?x:undefined}
+function avatar(p,i,small){
+  var cls="av"+(small?" s":"");
+  if(p&&p.photo)return '<img class="'+cls+'" src="'+esc(p.photo)+'" alt="">';
+  return '<span class="'+cls+'" style="background:'+color(i)+'">'+esc(initials(p.name))+'</span>';
+}
+function toPortrait(file){
+  return new Promise(function(res,rej){
+    if(!/^image\//.test(file.type)){rej(new Error("Ce fichier n'est pas une image."));return}
+    if(file.size>12*1048576){rej(new Error("Image trop lourde (12 Mo maximum)."));return}
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){
+      var s=Math.min(img.width,img.height);
+      var sx=(img.width-s)/2,sy=(img.height-s)*0.25;
+      var c=document.createElement("canvas");c.width=c.height=192;
+      c.getContext("2d").drawImage(img,sx,sy,s,s,0,0,192,192);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg",0.85));
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error("Image illisible. Utilisez un fichier JPEG, PNG ou WebP."))};
+    img.src=url;
+  });
+}
+async function portraitPrompt(id,btn){
+  var p=pById(id);if(!p)return;
+  var old=btn.textContent;btn.disabled=true;btn.textContent="Rédaction…";
+  try{
+    var t=await ask("Tu rédiges un prompt pour un générateur d'images afin de créer le portrait d'une PERSONNE FICTIVE, à partir de sa fiche persona.\n\nNom : "+p.name+"\n<fiche>\n"+p.fiche+"\n</fiche>\n\nConsignes : écris un seul paragraphe en anglais, de 60 à 90 mots. Décris un portrait réaliste (buste, regard vers l'objectif, lumière naturelle douce, fond neutre légèrement flou, cadrage carré) avec l'âge, la tenue et l'ambiance cohérents avec le métier, le lieu de vie et le style de la fiche. N'invente rien sur l'origine, l'ethnie, la religion, le handicap ou la santé si la fiche n'en parle pas : ne les précise pas. Termine par : fictional person, not a real individual. Réponds uniquement par le prompt.",null,400);
+    p.portraitPrompt=str(t);save();renderPersonas();
+    try{await navigator.clipboard.writeText(p.portraitPrompt);flash("Prompt copié. Collez-le dans votre générateur d'images.")}
+    catch(e){flash("Prompt prêt sous la fiche. Copiez-le dans votre générateur d'images.")}
+  }catch(e){btn.disabled=false;btn.textContent=old;flash(errMsg(e))}
+}
+
 /* ---------- compteurs ---------- */
 function updateCounts(){
   $("#n-personas").textContent=active().length;
@@ -982,7 +1026,7 @@ document.addEventListener("click",async function(e){
     }catch(err){$("#import-msg").textContent=errMsg(err)}
     b.disabled=false;
   }else if(a==="export-personas"){
-    saveFile("personas.json",JSON.stringify(S.personas.map(function(p){return {name:p.name,fiche:p.fiche}}),null,2));
+    saveFile("personas.json",JSON.stringify(S.personas.map(function(p){return {name:p.name,fiche:p.fiche,photo:p.photo||undefined}}),null,2));
   }else if(a==="export-json"){
     saveFile("focus-group-"+slug()+".json",JSON.stringify(S,null,2));
   }else if(a==="run-cold"){runCold()}
@@ -994,7 +1038,10 @@ document.addEventListener("click",async function(e){
   else if(a==="export-md"){saveFile("rapport-"+slug()+".md",buildReport())}
   else if(a==="copy-md"){
     try{await navigator.clipboard.writeText(buildReport());flash("Rapport copié.")}catch(err){flash("Copie refusée par le navigateur. Utilisez le téléchargement.")}
-  }else if(a==="test-api"){testApi(b)}else if(a==="forget-key"){forgetKey()}else if(a==="lock"){try{sessionStorage.removeItem("fgs.pw")}catch(err){}location.reload()}else if(a==="reset-session"){
+  }else if(a==="photo-add"){photoTarget=b.closest("article").dataset.id;$("#photo-input").click()}
+  else if(a==="photo-del"){var pp=pById(b.closest("article").dataset.id);if(pp){delete pp.photo;save();renderPersonas();renderCold();renderFeed()}}
+  else if(a==="photo-prompt"){portraitPrompt(b.closest("article").dataset.id,b)}
+  else if(a==="test-api"){testApi(b)}else if(a==="forget-key"){forgetKey()}else if(a==="lock"){try{sessionStorage.removeItem("fgs.pw")}catch(err){}location.reload()}else if(a==="reset-session"){
     if(b.dataset.armed){resetResults();save();b.textContent="Effacer les résultats";delete b.dataset.armed;renderCold();renderFeed();renderChips();renderRunStatus();updateCounts()}
     else{b.dataset.armed="1";b.textContent="Confirmer l'effacement";setTimeout(function(){if(b.dataset.armed){delete b.dataset.armed;b.textContent="Effacer les résultats"}},4000)}
   }
@@ -1010,12 +1057,17 @@ $("#file-import").addEventListener("change",function(e){
     try{
       var j=JSON.parse(rd.result);
       if(Array.isArray(j)){
-        S.personas=S.personas.filter(function(x){return !x.exemple}).concat(j.map(function(x){return {id:uid(),name:str(x.name)||"Sans nom",fiche:String(x.fiche||""),actif:true,exemple:false}}));
+        S.personas=S.personas.filter(function(x){return !x.exemple}).concat(j.map(function(x){return {id:uid(),name:str(x.name)||"Sans nom",fiche:String(x.fiche||""),actif:true,exemple:false,photo:cleanPhoto(x.photo)}}));
       }else{S=mergeState(null,j)}
       save();init();flash("Import terminé.");
     }catch(err){flash("Fichier JSON illisible.")}
   };
   rd.readAsText(f);e.target.value="";
+});
+$("#photo-input").addEventListener("change",function(e){
+  var f=e.target.files&&e.target.files[0];e.target.value="";
+  var pp=pById(photoTarget);if(!f||!pp)return;
+  toPortrait(f).then(function(url){pp.photo=url;save();renderPersonas();renderCold();renderFeed();flash("Portrait ajouté.")}).catch(function(err){flash(err.message||"Portrait impossible.")});
 });
 $("#api-key").addEventListener("input",function(e){CFG.key=e.target.value.trim();saveCfg();updateKeyNotice()});
 [["quick","#m-quick"],["default","#m-default"],["complex","#m-complex"]].forEach(function(m){
